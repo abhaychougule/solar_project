@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Panel Detection and Fault Classification</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+
+</head>
+
+<body>
+    <div class="container">
+        <!-- <h1 class="text-center my-4">Solar Panel Detection and Fault Classification</h1> -->
+        <h1 class="text-center my-4" style="font-family: Verdana;color: #400303; font-weight: 700; letter-spacing: 1.5px;">
+            Deep Learning Based Solar Panel Fault Detection and Analysis of Power consumption
+        </h1>
+        <hr>
+
+        
+        <!-- Row for Camera Output and Predictions -->
+        <div class="row">
+            <!-- Camera Output -->
+            <div class="col-md-6">
+                <h3 style="font-family: 'Verdana'; color: #b05d8b; font-weight: 200; letter-spacing: 1px; ">Camera Output</h3>
+                <img src="{{ url_for('video_feed') }}" class="img-fluid border rounded" alt="Video Feed">
+            </div>
+            <!-- Fault Predictions -->
+            <div class="col-md-6">
+                <h3 style="font-family: 'Verdana'; color: #b05d8b; font-weight: 200; letter-spacing: 1px;">Fault Predictions</h3>
+                <div id="predictions" class="row">
+                    <!-- 9 Labels for Predictions -->
+                    {% for i in range(9) %}
+                        <div class="col-md-4 my-2">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5 class="card-title">Section {{ i+1 }}</h5>
+                                    <p class="card-text" id="label_{{ i }}">Prediction</p>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Row for Buttons -->
+        <div class="row my-4">
+            <div class="col-md-3 text-center">
+                <button class="btn btn-success" style="font-family: 'Oswald', sans-serif;background-color:green; color: #fff; font-weight: 700; letter-spacing: 1.5px;" onclick="detect()">Detect</button>
+            </div>
+            <div class="col-md-3 text-center">
+                <button class="btn btn-success" style="font-family: 'Oswald', sans-serif;background-color:green; color: #fff; font-weight: 700; letter-spacing: 1.5px;" onclick="refreshPage()">Refresh</button>
+            </div>
+            <div class="col-md-6 text-center">
+                <button class="btn btn-success" style="font-family: 'Oswald', sans-serif; background-color:green; color: #fff; font-weight: 700; letter-spacing: 1.5px;" onclick="exit()">Exit</button>
+            </div>
+        </div>
+        <hr>
+        <!-- Row for Displaying Detection Results -->
+        <div class="row">
+            <div class="col-md-12">
+                <h3>Detection Results</h3>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Fault Name</th>
+                            <th>Fault Value</th>
+                            <th>Fault Section</th>
+                            <th>Date</th>
+                            <th>Fault Count</th>
+                            <th>Not Fault Count</th>
+                            <th>Total Loss</th>
+                            <th>Total Gain</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fault_data">
+                        <!-- Fault data rows will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap and JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function detect() {
+    fetch('/detect', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);  // Log the data to ensure it contains the 'sections' array
+            
+           
+
+            if (data.sections && data.sections.length > 0) {
+                // Clear existing label texts
+                for (let i = 0; i < 9; i++) {
+                    document.getElementById(`label_${i}`).innerText = ''; 
+                }
+
+                // Update labels with the latest fault_name
+                data.sections.forEach((section, index) => {
+                    document.getElementById(`label_${index}`).innerText = section.fault_name;
+                });
+            } else {
+                console.error('No sections data received');
+            }
+            
+            // Optionally, update the grid with the latest data
+            updateFaultData();
+        });
+}
+// Function to exit the page
+        function exit() {
+            fetch('/exit', { method: 'POST' })
+                .then(() => window.close());
+        }
+
+        // Function to refresh the page
+function refreshPage() {
+    window.location.reload();
+}
+        function updateFaultData() {
+    fetch('/get_fault_data')
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);  // Log the data to inspect its structure
+            let faultData = document.getElementById('fault_data');
+            faultData.innerHTML = '';
+            data.forEach(row => {
+                let tr = document.createElement('tr');
+                row.forEach(cell => {
+                    let td = document.createElement('td');
+                    td.innerText = cell;
+                    tr.appendChild(td);
+                });
+                faultData.appendChild(tr);
+            });
+        });
+}
+
+
+        // Update data on page load
+        updateFaultData();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>

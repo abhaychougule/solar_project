@@ -1,0 +1,21 @@
+SolarPanelDetection/
+│
+├── app.py                  # Main Flask app
+├── detection.py            # Detection logic
+├── templates/
+│   ├── index.html          # Main HTML page with video feed
+│   └── results.html        # Page to show detection results
+├── static/
+│   ├── styles.css          # CSS file for styling
+│   └── scripts.js          # JavaScript for client-side processing
+├── Classifiers/
+│   ├── solar_panel_detection_model.h5
+│   ├── labels.txt
+│   ├── solar_fault_detection_model.h5
+│   └── fault_labels.txt
+└── requirements.txt        # Python dependencies
+
+
+Flask
+tensorflow
+opencv-python
