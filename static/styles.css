@@ -1,8 +1,10 @@
 body {
-    font-family: Arial, sans-serif;
-    text-align: center;
+    font-family: 'Roboto', sans-serif;
+    background-color: #f7f7f7;
 }
-img {
-    width: 80%;
-    border: 2px solid black;
+.title-header {
+    font-family: Verdana;
+    color: #400303;
+    font-weight: 700;
+    letter-spacing: 1.5px;
 }

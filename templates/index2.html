@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Panel Detection and Fault Classification</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container-fluid px-5">
+        <h1 class="text-center my-4 title-header">
+            Deep Learning Based Solar Panel Fault Detection and Analysis of Power Consumption
+        </h1>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 rounded shadow-sm">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">SolarAI</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a class="nav-link active" href="#">Home</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" onclick="exit()">Stop Camera</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/about">About Project</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/fault_trainer">Fault_Trainer</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/panel_trainer">Panel_Trainer</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">Camera Output</div>
+                    <div class="card-body text-center">
+                        <img src="{{ url_for('video_feed') }}" class="img-fluid rounded" alt="Video Feed">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 d-flex flex-column justify-content-center align-items-center">
+                <button class="btn btn-success w-75 my-2" onclick="detect()">Detect</button>
+                <button class="btn btn-warning w-75 my-2" onclick="refreshPage()">Refresh</button>
+                <button class="btn btn-danger w-75 my-2" onclick="exit()">Exit</button>
+            </div>
+        </div>
+        <div class="card shadow-sm my-4">
+            <div class="card-header bg-dark text-white">Fault Predictions - 9 Sections</div>
+            <div class="card-body">
+                <div class="row">
+                    {% for i in range(9) %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-info">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Section {{ i+1 }}</h6>
+                                <p class="card-text text-primary fw-bold" id="label_{{ i }}">Prediction</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="card shadow-sm my-4">
+            <div class="card-header bg-secondary text-white">Detection Results</div>
+            <div class="card-body table-responsive">
+                <table class="table table-bordered table-striped text-center align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Fault Name</th>
+                            <th>Fault Value</th>
+                            <th>Fault Section</th>
+                            <th>Date</th>
+                            <th>Fault Count</th>
+                            <th>Not Fault Count</th>
+                            <th>Total Loss</th>
+                            <th>Total Gain</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fault_data"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script>
+        function detect() {
+            fetch('/detect', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.sections && data.sections.length > 0) {
+                        for (let i = 0; i < 9; i++) {
+                            document.getElementById(`label_${i}`).innerText = '';
+                        }
+                        data.sections.forEach((section, index) => {
+                            document.getElementById(`label_${index}`).innerText = section.fault_name;
+                        });
+                    }
+                    updateFaultData();
+                });
+        }
+        function refreshPage() {
+            window.location.reload();
+        }
+        function exit() {
+            fetch('/exit', { method: 'POST' })
+                .then(() => window.close());
+        }
+        function updateFaultData() {
+            fetch('/get_fault_data')
+                .then(response => response.json())
+                .then(data => {
+                    let faultData = document.getElementById('fault_data');
+                    faultData.innerHTML = '';
+                    data.forEach(row => {
+                        let tr = document.createElement('tr');
+                        row.forEach(cell => {
+                            let td = document.createElement('td');
+                            td.innerText = cell;
+                            tr.appendChild(td);
+                        });
+                        faultData.appendChild(tr);
+                    });
+                });
+        }
+        updateFaultData();
+    </script>
+</body>
+</html>

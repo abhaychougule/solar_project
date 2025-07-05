@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel Trainer</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #f0f9ff, #e0f7fa);
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 60px auto;
+      background-color: white;
+      padding: 40px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #006064;
+      margin-bottom: 30px;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 20px;
+      color: #004d40;
+    }
+
+    input[type="file"] {
+      display: block;
+      margin-top: 10px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #00796b;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #004d40;
+    }
+
+    #progress-bar {
+      width: 100%;
+      height: 20px;
+      margin-top: 20px;
+    }
+
+    #log-output {
+      background-color: #f4f4f4;
+      padding: 10px;
+      margin-top: 20px;
+      height: 200px;
+      overflow-y: scroll;
+      border: 1px solid #ccc;
+      font-family: monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Train Panel Detection Model</h1>
+    <form id="train-form" method="post" enctype="multipart/form-data">
+      <label>Choose Train Folder:</label>
+      <input type="file" name="train_folder" webkitdirectory directory required>
+
+      <label>Choose Test Folder:</label>
+      <input type="file" name="test_folder" webkitdirectory directory required>
+
+      <button type="submit">Start Training</button>
+    </form>
+
+    <progress id="progress-bar" value="0" max="100"></progress>
+    <div id="log-output">Waiting to start...</div>
+  </div>
+
+  <script>
+    const form = document.getElementById("train-form");
+    const progressBar = document.getElementById("progress-bar");
+    const logOutput = document.getElementById("log-output");
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const formData = new FormData(form);
+      logOutput.innerText = "📦 Uploading and training started...\n";
+
+      const response = await fetch("/panel_trainer", {
+        method: "POST",
+        body: formData,
+      });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+        logOutput.innerText += chunk;
+        logOutput.scrollTop = logOutput.scrollHeight;
+
+        const match = chunk.match(/Progress: (\d+)%/);
+        if (match) progressBar.value = parseInt(match[1]);
+      }
+
+      logOutput.innerText += "\n🎉 Training Completed!";
+      progressBar.value = 100;
+    });
+  </script>
+</body>
+</html>

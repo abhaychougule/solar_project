@@ -1,18 +1,23 @@
-
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import os
 
-def train_fault_model(train_dir, val_dir):
-    class_names = ["Bird-drop", "Clean", "Dusty", "Electrical-damage", "Physical-Damage", "Snow-Covered"]
-    with open('fault_labels.txt', 'w') as f:
+def train_panel_model(train_dir, val_dir):
+    # Define the class names (ensure these folders exist in train/test directories)
+    class_names = ["Solar_Panel", "No_Panel"]
+
+    # Save class names to a file
+    with open('labels.txt', 'w') as f:
         for class_name in class_names:
             f.write(f"{class_name}\n")
 
+    # Image size and batch config
     img_height, img_width = 150, 150
     batch_size = 32
 
+    # Image augmentation for training and normalization for validation
     train_datagen = ImageDataGenerator(
         rescale=1.0/255.0,
         rotation_range=20,
@@ -40,6 +45,7 @@ def train_fault_model(train_dir, val_dir):
         class_mode='categorical'
     )
 
+    # Define CNN model
     model = Sequential([
         Conv2D(32, (3, 3), activation='relu', input_shape=(img_height, img_width, 3)),
         MaxPooling2D(pool_size=(2, 2)),
@@ -53,14 +59,19 @@ def train_fault_model(train_dir, val_dir):
         Dense(len(class_names), activation='softmax')
     ])
 
+    # Compile model
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
+    # Train model
+    epochs = 20
     model.fit(
         train_generator,
         steps_per_epoch=train_generator.samples // batch_size,
         validation_data=val_generator,
         validation_steps=val_generator.samples // batch_size,
-        epochs=20
+        epochs=epochs
     )
 
-    model.save('solar_fault_detection_model.h5')
+    # Save trained model
+    model.save('solar_panel_detection_model.h5')
+    print("✅ Solar Panel Detection Model training complete and saved.")

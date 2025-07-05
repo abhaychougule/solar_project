@@ -3,14 +3,14 @@ import numpy as np
 from tensorflow.keras.models import load_model
 
 # Load models
-panel_model = load_model('Classifiers/solar_panel_detection_model.h5')
-fault_model = load_model('Classifiers/solar_fault_detection_model.h5')
+panel_model = load_model(r'F:\Shital Patil\solar_project\solar_project\Classifiers\solar_panel_detection_model.h5')
+fault_model = load_model(r'F:\Shital Patil\solar_project\solar_project\Classifiers\solar_fault_detection_model.h5')
 
 # Load labels
-with open('Classifiers/labels.txt') as f:
+with open(r'F:\Shital Patil\solar_project\solar_project\Classifiers\labels.txt') as f:
     panel_labels = [line.strip() for line in f]
 
-with open('Classifiers/fault_labels.txt') as f:
+with open(r'F:\Shital Patil\solar_project\solar_project\Classifiers\fault_labels.txt') as f:
     fault_labels = [line.strip() for line in f]
 
 # Fault value mapping
